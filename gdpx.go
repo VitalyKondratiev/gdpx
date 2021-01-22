@@ -21,21 +21,6 @@ func main() {
 	}
 }
 
-type EnvironmentConfig struct {
-	nginxDomain string
-	nginxPort   int
-}
-
-type ProjectConfig struct {
-	projectPath   string
-	configPath    string
-	defaultConfig EnvironmentConfig
-}
-
-type GlobalConfig struct {
-	projects ProjectConfig
-}
-
 func GetDockerComposeConfigs(root string) ([]string, error) {
 	var files []string
 	rootDirInfo, err := ioutil.ReadDir(root)
