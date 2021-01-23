@@ -5,33 +5,61 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"./helpers"
 )
 
+const userConfigDir = "/.config/gdpx"
+
 func main() {
-	files, err := GetDockerComposeConfigs("/home/user/Documents/GitProjects")
+	config, _ := LoadMainConfig()
+	fmt.Println(config.workdirPath)
+	projects, err := LoadDockerComposeConfigs(config.workdirPath)
 	if err != nil {
 		fmt.Println(err)
 	}
-	for _, filePath := range files {
-		fmt.Println("\033[0;31m" + filePath + "\033[0m")
-		config, _ := ReadEnvFile(filePath)
-		fmt.Println(config.nginxDomain, config.nginxPort)
+	if (len(projects) > 0 ){
+		for _, project := range projects {
+			fmt.Println(
+				helpers.SuccessText(project.defaultConfig.nginxDomain + " " + strconv.Itoa(project.defaultConfig.nginxPort)),
+			)
+		}
+	} else {
+		fmt.Println(
+			helpers.FailText("Location '" + config.workdirPath + "' don't contain any supported project"),
+		)
 	}
 }
 
-func GetDockerComposeConfigs(root string) ([]string, error) {
-	var files []string
+func LoadMainConfig() (GlobalConfig, error) {
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	userConfigDir := filepath.Join(dir, userConfigDir)
+  var globalConfig GlobalConfig;
+  configFile, err := os.Open(userConfigDir + "/gdpx.json")
+  if err != nil {
+		globalConfig.workdirPath = helpers.SelectDirectory("/")
+		return globalConfig, err
+  }
+  defer configFile.Close()
+  
+  return globalConfig, nil
+}
+
+func LoadDockerComposeConfigs(root string) ([]ProjectConfig, error) {
+	var projects []ProjectConfig
 	rootDirInfo, err := ioutil.ReadDir(root)
 	if err != nil {
-		return files, err
+		return projects, err
 	}
 	for _, dir := range rootDirInfo {
 		if dir.IsDir() {
 			dirInfo, err := ioutil.ReadDir(root + "/" + dir.Name())
 			if err != nil {
-				return files, err
+				return projects, err
 			}
 			hasComposeFile := false
 			hasEnvironmentFile := false
@@ -44,14 +72,18 @@ func GetDockerComposeConfigs(root string) ([]string, error) {
 				}
 			}
 			if hasComposeFile && hasEnvironmentFile {
-				files = append(files, root+"/"+dir.Name()+"/.env")
+				projectPath := root+"/"+dir.Name()+"/.env"
+				configPath := root+"/"+dir.Name()
+				config, _ := GetProjectEnvironment(projectPath)
+				project := ProjectConfig{projectPath, configPath, config}
+				projects = append(projects, project)
 			}
 		}
 	}
-	return files, nil
+	return projects, nil
 }
 
-func ReadEnvFile(filePath string) (EnvironmentConfig, error) {
+func GetProjectEnvironment(filePath string) (EnvironmentConfig, error) {
 	var config EnvironmentConfig
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -64,10 +96,14 @@ func ReadEnvFile(filePath string) (EnvironmentConfig, error) {
 	var nginxPort string
 	for scanner.Scan() {
 		if strings.HasPrefix(scanner.Text(), "SITE_DOMAIN=") {
-			siteDomain = strings.Trim(strings.ReplaceAll(scanner.Text(), "SITE_DOMAIN=", ""), " ")
+			siteDomain = strings.Trim(
+				strings.ReplaceAll(scanner.Text(), "SITE_DOMAIN=", ""), " ",
+			)
 		}
 		if strings.HasPrefix(scanner.Text(), "NGINX_PORT=") {
-			nginxPort = strings.Trim(strings.ReplaceAll(scanner.Text(), "NGINX_PORT=", ""), " ")
+			nginxPort = strings.Trim(
+				strings.ReplaceAll(scanner.Text(), "NGINX_PORT=", ""), " ",
+			)
 		}
 	}
 	nginxPortInt, err := strconv.Atoi(nginxPort)

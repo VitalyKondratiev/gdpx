@@ -12,5 +12,6 @@ type ProjectConfig struct {
 }
 
 type GlobalConfig struct {
-	projects ProjectConfig
+	workdirPath string
+	projects []ProjectConfig
 }
