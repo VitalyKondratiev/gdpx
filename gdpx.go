@@ -18,10 +18,11 @@ func main() {
 	
 	switch os.Args[1] {
 		case "list":
-			CommandList()
+			config, _ := LoadMainConfig()
+			CommandList(config)
 		case "recreate":
-			CreateMainConfig()
-			CommandList()
+			config, _ := CreateMainConfig()
+			CommandList(config)
 		case "help":
 			CommandHelp()
 		default:
@@ -29,8 +30,7 @@ func main() {
 	}
 }
 
-func CommandList() {
-	config, _ := LoadMainConfig()
+func CommandList(config GlobalConfig) {
 	for _, project := range config.Projects {
 		fmt.Printf(
 			"  %v\t%v:%v\tactive: %v\n",
