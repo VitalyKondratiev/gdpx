@@ -1,17 +1,16 @@
 package main
 
 type EnvironmentConfig struct {
-	nginxDomain string
-	nginxPort   int
+	NginxDomain string `json:"nginxDomain"`
+	NginxPort   int `json:"nginxPort"`
 }
 
 type ProjectConfig struct {
-	projectPath   string
-	configPath    string
-	defaultConfig EnvironmentConfig
+	ProjectPath   string `json:"projectPath"`
+	ConfigPath    string `json:"configPath"`
+	DefaultConfig EnvironmentConfig `json:"defaultConfig"`
 }
 
 type GlobalConfig struct {
-	workdirPath string
-	projects []ProjectConfig
+	WorkdirPath string `json:"workdirPath"`
 }

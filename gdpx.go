@@ -10,26 +10,27 @@ import (
 	"strconv"
 	"strings"
 	"./helpers"
+	"encoding/json"
 )
 
 const userConfigDir = "/.config/gdpx"
 
 func main() {
 	config, _ := LoadMainConfig()
-	fmt.Println(config.workdirPath)
-	projects, err := LoadDockerComposeConfigs(config.workdirPath)
+	projects, err := LoadDockerComposeConfigs(config.WorkdirPath)
 	if err != nil {
 		fmt.Println(err)
 	}
 	if (len(projects) > 0 ){
 		for _, project := range projects {
 			fmt.Println(
-				helpers.SuccessText(project.defaultConfig.nginxDomain + " " + strconv.Itoa(project.defaultConfig.nginxPort)),
+				helpers.SuccessText(project.DefaultConfig.NginxDomain + ":" + strconv.Itoa(project.DefaultConfig.NginxPort)),
 			)
 		}
+		SaveMainConfig(config)
 	} else {
 		fmt.Println(
-			helpers.FailText("Location '" + config.workdirPath + "' don't contain any supported project"),
+			helpers.FailText("Location '" + config.WorkdirPath + "' don't contain any supported project"),
 		)
 	}
 }
@@ -39,14 +40,25 @@ func LoadMainConfig() (GlobalConfig, error) {
 	dir := usr.HomeDir
 	userConfigDir := filepath.Join(dir, userConfigDir)
   var globalConfig GlobalConfig;
-  configFile, err := os.Open(userConfigDir + "/gdpx.json")
+  configFile, err := ioutil.ReadFile(userConfigDir + "/gdpx.json")
   if err != nil {
-		globalConfig.workdirPath = helpers.SelectDirectory("/")
+		globalConfig.WorkdirPath = helpers.SelectDirectory("/")
 		return globalConfig, err
   }
-  defer configFile.Close()
-  
+	_ = json.Unmarshal([]byte(configFile), &globalConfig)
   return globalConfig, nil
+}
+
+func SaveMainConfig(config GlobalConfig)  {
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	userConfigDir := filepath.Join(dir, userConfigDir)
+	_, err := os.Open(userConfigDir + "/gdpx.json")
+	if err != nil {
+		os.MkdirAll(userConfigDir, os.ModePerm)
+	}
+	file, _ := json.MarshalIndent(config, "", "\t")
+	_ = ioutil.WriteFile(userConfigDir + "/gdpx.json", file, 0644)
 }
 
 func LoadDockerComposeConfigs(root string) ([]ProjectConfig, error) {
