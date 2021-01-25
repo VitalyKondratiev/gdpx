@@ -14,6 +14,15 @@ import (
 
 const userConfigPath = "/.config/gdpx"
 
+// GetConfigPath : Get fullpath to config
+func GetConfigPath() string {
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	configPath := filepath.Join(dir, userConfigPath)
+
+	return configPath
+}
+
 // LoadMainConfig : get main application configuration
 func LoadMainConfig() (GlobalConfig, error) {
 	usr, _ := user.Current()
@@ -47,10 +56,13 @@ func CreateMainConfig() (GlobalConfig, error) {
 	var config GlobalConfig
 	usr, _ := user.Current()
 	dir := usr.HomeDir
+	configPath := filepath.Join(dir, userConfigPath)
 	config.WorkdirPath = helpers.SelectDirectory(dir)
 	projects, _ := LoadDockerComposeConfigs(config.WorkdirPath)
 	if len(projects) > 0 {
 		config.Projects = projects
+		UnpackEnvironment(configPath)
+		UnpackProxyFiles(configPath, projects)
 		SaveMainConfig(config)
 		fmt.Println(
 			helpers.SuccessText("Succesfully added " + strconv.Itoa(len(projects)) + " projects\n"),

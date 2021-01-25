@@ -1,0 +1,18 @@
+version: '2'
+services:
+  proxy:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - "./proxy.conf:/etc/nginx/conf.d/proxy.conf:ro"
+      - "./upstreams.conf:/etc/nginx/conf.d/upstreams.conf:ro"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+networks:
+  gdpx_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.99.0.0/24
+          gateway: 172.99.0.1

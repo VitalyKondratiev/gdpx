@@ -1,12 +1,9 @@
 package helpers
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
-
-	"github.com/manifoldco/promptui"
 )
 
 // SelectDirectory : select directory with console UI
@@ -26,18 +23,8 @@ func SelectDirectory(path string) string {
 		}
 	}
 
-	prompt := promptui.Select{
-		Label:        "Current directory is '" + SuccessText(path) + "', select '" + SuccessText(".") + "' for select",
-		Items:        names,
-		HideSelected: true,
-	}
+	result := SelectStringVariant("Current directory is '"+SuccessText(path)+"', select '"+SuccessText(".")+"' for select", names)
 
-	_, result, err := prompt.Run()
-
-	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
-		return path
-	}
 	path = strings.Trim(path, "/")
 	if path != "" {
 		path = path + "/"
