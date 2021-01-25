@@ -3,30 +3,32 @@ package helpers
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
 	"path/filepath"
+	"strings"
+
 	"github.com/manifoldco/promptui"
 )
 
+// SelectDirectory : select directory with console UI
 func SelectDirectory(path string) string {
 	var selectedDirectory string
 	var names []string
 
-	if (path != "/") {
+	if path != "/" {
 		names = append(names, "..")
 	}
 	names = append(names, ".")
 
 	files, _ := ioutil.ReadDir(path)
 	for _, f := range files {
-		if (f.IsDir() == true) {
+		if f.IsDir() == true {
 			names = append(names, f.Name())
 		}
 	}
 
 	prompt := promptui.Select{
-		Label: "Current directory is '" + SuccessText(path) + "', select '" + SuccessText(".") + "' for select",
-		Items: names,
+		Label:        "Current directory is '" + SuccessText(path) + "', select '" + SuccessText(".") + "' for select",
+		Items:        names,
 		HideSelected: true,
 	}
 
@@ -35,9 +37,9 @@ func SelectDirectory(path string) string {
 	if err != nil {
 		fmt.Printf("Prompt failed %v\n", err)
 		return path
-	}	
+	}
 	path = strings.Trim(path, "/")
-	if (path != "") {
+	if path != "" {
 		path = path + "/"
 	}
 	path = filepath.Clean("/" + path + result)

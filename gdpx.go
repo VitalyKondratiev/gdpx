@@ -1,8 +1,9 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
+
 	"./helpers"
 )
 
@@ -15,21 +16,22 @@ func main() {
 		CommandHelp()
 		os.Exit(0)
 	}
-	
+
 	switch os.Args[1] {
-		case "list":
-			config, _ := LoadMainConfig()
-			CommandList(config)
-		case "recreate":
-			config, _ := CreateMainConfig()
-			CommandList(config)
-		case "help":
-			CommandHelp()
-		default:
-			CommandHelp()
+	case "list":
+		config, _ := LoadMainConfig()
+		CommandList(config)
+	case "recreate":
+		config, _ := CreateMainConfig()
+		CommandList(config)
+	case "help":
+		CommandHelp()
+	default:
+		CommandHelp()
 	}
 }
 
+// CommandList : shows projects
 func CommandList(config GlobalConfig) {
 	for _, project := range config.Projects {
 		fmt.Printf(
@@ -42,7 +44,8 @@ func CommandList(config GlobalConfig) {
 	}
 }
 
-func CommandHelp()  {
+// CommandHelp : shows all available commands
+func CommandHelp() {
 	fmt.Println("List of avalaible commands:")
 	fmt.Println("  ", "list\t\tlist of projects in active configuration")
 	fmt.Println("  ", "recreate\trecreate configuration file")
