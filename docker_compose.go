@@ -165,11 +165,14 @@ func StartProject(project ProjectConfig) {
 	newEnvFile, _ := os.Create(project.ConfigPath)
 	newEnvFile.Truncate(0)
 	newEnvFile.WriteString(strings.Join(newEnvContent, "\n"))
-
-	composeCmd := exec.Command("docker-compose", "up", "--force-recreate", "--build", "-d")
+	args := []string{"up", "--force-recreate", "--build", "-d"}
+	fmt.Println(
+		helpers.SuccessText("("+project.ProjectName+"):"),
+		"docker-compose", strings.Join(args, " "),
+	)
+	composeCmd := exec.Command("docker-compose", args...)
 	composeCmd.Dir = project.ProjectPath
-	composeCmdOut, _ := composeCmd.Output()
-	fmt.Println(string(composeCmdOut))
+	composeCmd.Output()
 }
 
 // StopProject : stop docker-compose, and return defaults env settings
@@ -205,10 +208,14 @@ func StopProject(project ProjectConfig) {
 	newEnvFile.Truncate(0)
 	newEnvFile.WriteString(strings.Join(newEnvContent, "\n"))
 
-	composeCmd := exec.Command("docker-compose", "stop")
+	args := []string{"stop"}
+	fmt.Println(
+		helpers.SuccessText("("+project.ProjectName+"):"),
+		"docker-compose", strings.Join(args, " "),
+	)
+	composeCmd := exec.Command("docker-compose", args...)
 	composeCmd.Dir = project.ProjectPath
-	composeCmdOut, _ := composeCmd.Output()
-	fmt.Println(string(composeCmdOut))
+	composeCmd.Output()
 }
 
 // UnpackEnvironment : unpack docker-environment files
@@ -273,11 +280,45 @@ func UnpackProxyFiles(path string, projects []ProjectConfig) {
 }
 
 // ReloadEnvironment : reload main environment
-func ReloadEnvironment() {
+func ReloadEnvironment() bool {
 	config, _ := LoadMainConfig()
 	UnpackProxyFiles(GetConfigPath(), config.Projects)
-	mainEnvCmd := exec.Command("docker-compose", "restart")
+
+	checkEnvCmd := exec.Command("docker-compose", "ps", "-q")
+	checkEnvCmd.Dir = GetConfigPath() + "/"
+	checkEnvCmdOut, _ := checkEnvCmd.Output()
+	var envRunning bool
+	if len(checkEnvCmdOut) == 0 {
+		envRunning = false
+	} else {
+		envRunning = true
+	}
+	status := false
+	command := "down"
+	args := []string{}
+	for _, project := range config.Projects {
+		if IsActiveProject(project) {
+			if envRunning {
+				command = "restart"
+			} else {
+				command = "up"
+				args = []string{"--force-recreate", "--build", "-d"}
+			}
+			status = true
+			break
+		}
+	}
+
+	args = append(args, command)
+	copy(args[1:], args)
+	args[0] = command
+	fmt.Println(
+		helpers.SuccessText("(reverse-proxy):"),
+		"docker-compose", strings.Join(args, " "),
+	)
+	mainEnvCmd := exec.Command("docker-compose", args...)
 	mainEnvCmd.Dir = GetConfigPath() + "/"
-	mainEnvCmdOut, _ := mainEnvCmd.Output()
-	fmt.Println(string(mainEnvCmdOut))
+	mainEnvCmd.Output()
+
+	return status
 }

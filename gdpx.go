@@ -97,6 +97,7 @@ func CommandStop(config GlobalConfig) {
 		for _, project := range config.Projects {
 			if project.ProjectName == selectedProjectName {
 				StopProject(project)
+				ReloadEnvironment()
 				break
 			}
 		}
@@ -111,6 +112,7 @@ func CommandStop(config GlobalConfig) {
 func CommandHelp() {
 	fmt.Println("List of avalaible commands:")
 	fmt.Println("  ", "list\t\tlist of projects in active configuration")
-	fmt.Println("  ", "start\tstart project (you can select project interactively)")
+	fmt.Println("  ", "start\tstart unactive project (you can select project interactively)")
+	fmt.Println("  ", "stop\tstop active project (you can select project interactively)")
 	fmt.Println("  ", "recreate\trecreate configuration file")
 }

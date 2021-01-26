@@ -10,6 +10,9 @@ services:
       - "./upstreams.conf:/etc/nginx/conf.d/upstreams.conf:ro"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      gdpx_net:
+        ipv4_address: 172.99.0.2
 networks:
   gdpx_net:
     driver: bridge
