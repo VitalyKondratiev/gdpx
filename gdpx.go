@@ -10,6 +10,7 @@ import (
 
 const siteDomainVariable = "SITE_DOMAIN"
 const nginxPortVariable = "NGINX_PORT"
+const nginxSslPortVariable = "NGINX_PORT_SSL"
 
 func main() {
 

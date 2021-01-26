@@ -2,8 +2,9 @@ package main
 
 // EnvironmentConfig : configuration for docker environment
 type EnvironmentConfig struct {
-	NginxDomain string `json:"nginxDomain"`
-	NginxPort   int    `json:"nginxPort"`
+	NginxDomain  string `json:"nginxDomain"`
+	NginxPort    int    `json:"nginxPort"`
+	NginxSslPort int    `json:"nginxSslPort"`
 }
 
 // ProjectConfig : configuration for project

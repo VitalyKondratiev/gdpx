@@ -61,6 +61,7 @@ func GetProjectEnvironment(filePath string) (EnvironmentConfig, error) {
 	scanner := bufio.NewScanner(file)
 	var siteDomain string
 	var nginxPort string
+	var nginxSslPort string
 	for scanner.Scan() {
 		if strings.HasPrefix(scanner.Text(), siteDomainVariable+"=") {
 			siteDomain = strings.Trim(
@@ -72,9 +73,15 @@ func GetProjectEnvironment(filePath string) (EnvironmentConfig, error) {
 				strings.ReplaceAll(scanner.Text(), nginxPortVariable+"=", ""), " ",
 			)
 		}
+		if strings.HasPrefix(scanner.Text(), nginxSslPortVariable+"=") {
+			nginxSslPort = strings.Trim(
+				strings.ReplaceAll(scanner.Text(), nginxSslPortVariable+"=", ""), " ",
+			)
+		}
 	}
 	nginxPortInt, err := strconv.Atoi(nginxPort)
-	config = EnvironmentConfig{siteDomain, nginxPortInt}
+	nginxSslPortInt, err := strconv.Atoi(nginxSslPort)
+	config = EnvironmentConfig{siteDomain, nginxPortInt, nginxSslPortInt}
 	return config, nil
 }
 
@@ -127,7 +134,6 @@ func GetActiveProjectPort(project ProjectConfig) (int, error) {
 
 // StartProject : prepare and launch project docker-compose
 func StartProject(project ProjectConfig) {
-	newNginxPort := helpers.GetOpenedPort()
 
 	envFile, _ := os.Open(project.ConfigPath)
 	defer envFile.Close()
@@ -138,12 +144,19 @@ func StartProject(project ProjectConfig) {
 
 	for scanner.Scan() {
 		if strings.HasPrefix(scanner.Text(), nginxPortVariable+"=") {
-			nginxPortString := scanner.Text()
+			newNginxPort := helpers.GetOpenedPort()
 			oldNginxPort := strings.Trim(
 				strings.ReplaceAll(scanner.Text(), nginxPortVariable+"=", ""), " ",
 			)
-			nginxPortString = strings.Replace(nginxPortString, oldNginxPort, strconv.Itoa(newNginxPort), -1)
+			nginxPortString := strings.Replace(scanner.Text(), oldNginxPort, strconv.Itoa(newNginxPort), -1)
 			newEnvContent = append(newEnvContent, nginxPortString)
+		} else if strings.HasPrefix(scanner.Text(), nginxSslPortVariable+"=") {
+			newNginxSslPort := helpers.GetOpenedPort()
+			oldNginxSslPort := strings.Trim(
+				strings.ReplaceAll(scanner.Text(), nginxSslPortVariable+"=", ""), " ",
+			)
+			nginxSslPortString := strings.Replace(scanner.Text(), oldNginxSslPort, strconv.Itoa(newNginxSslPort), -1)
+			newEnvContent = append(newEnvContent, nginxSslPortString)
 		} else {
 			newEnvContent = append(newEnvContent, scanner.Text())
 		}
@@ -161,8 +174,6 @@ func StartProject(project ProjectConfig) {
 
 // StopProject : stop docker-compose, and return defaults env settings
 func StopProject(project ProjectConfig) {
-	newNginxPort := project.DefaultConfig.NginxPort
-
 	envFile, _ := os.Open(project.ConfigPath)
 	defer envFile.Close()
 
@@ -176,8 +187,15 @@ func StopProject(project ProjectConfig) {
 			oldNginxPort := strings.Trim(
 				strings.ReplaceAll(scanner.Text(), nginxPortVariable+"=", ""), " ",
 			)
-			nginxPortString = strings.Replace(nginxPortString, oldNginxPort, strconv.Itoa(newNginxPort), -1)
+			nginxPortString = strings.Replace(nginxPortString, oldNginxPort, strconv.Itoa(project.DefaultConfig.NginxPort), -1)
 			newEnvContent = append(newEnvContent, nginxPortString)
+		} else if strings.HasPrefix(scanner.Text(), nginxSslPortVariable+"=") {
+			nginxSslPortString := scanner.Text()
+			oldSslNginxPort := strings.Trim(
+				strings.ReplaceAll(scanner.Text(), nginxSslPortVariable+"=", ""), " ",
+			)
+			nginxSslPortString = strings.Replace(nginxSslPortString, oldSslNginxPort, strconv.Itoa(project.DefaultConfig.NginxSslPort), -1)
+			newEnvContent = append(newEnvContent, nginxSslPortString)
 		} else {
 			newEnvContent = append(newEnvContent, scanner.Text())
 		}
