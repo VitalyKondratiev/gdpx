@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"text/tabwriter"
 
 	"./helpers"
 )
@@ -41,23 +42,28 @@ func main() {
 
 // CommandList : shows projects
 func CommandList(config GlobalConfig) {
+
+	const padding = 3
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', tabwriter.StripEscape)
 	for _, project := range config.Projects {
 		isActive := IsActiveProject(project)
 		activePort, _ := GetActiveProjectPort(project)
-		var activePortString string
+		var colorProjectName string
 		if isActive {
-			activePortString = helpers.SuccessText(strconv.Itoa(activePort))
+			colorProjectName = helpers.SuccessText(project.ProjectName)
 		} else {
-			activePortString = helpers.FailText(strconv.Itoa(activePort))
+			colorProjectName = helpers.FailText(project.ProjectName)
 		}
-		fmt.Printf(
-			"  %v\t%v:%v\tactive: %v\n",
-			helpers.SuccessText(project.ProjectName),
+		line := fmt.Sprintf(
+			"\t%v\thttp://%v:%v\t",
+			colorProjectName,
 			project.DefaultConfig.NginxDomain,
-			strconv.Itoa(project.DefaultConfig.NginxPort)+" ("+activePortString+")",
-			isActive,
+			strconv.Itoa(project.DefaultConfig.NginxPort)+" ("+strconv.Itoa(activePort)+")",
 		)
+		fmt.Fprintln(w, line)
 	}
+
+	w.Flush()
 }
 
 // CommandStart : starts project
