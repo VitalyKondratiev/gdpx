@@ -224,7 +224,7 @@ func UnpackEnvironment(path string) {
 		LocateOrder: []rice.LocateMethod{rice.LocateEmbedded, rice.LocateAppended, rice.LocateFS},
 	}
 
-	box, _ := conf.FindBox("./docker-environment")
+	box := conf.MustFindBox("./docker-environment")
 	dockerComposeString, _ := box.String("docker-compose.yml")
 	dockerComposeFile, _ := os.Create(path + "/docker-compose.yml")
 	defer dockerComposeFile.Close()
@@ -241,7 +241,7 @@ func UnpackProxyFiles(path string, projects []ProjectConfig) {
 	conf := rice.Config{
 		LocateOrder: []rice.LocateMethod{rice.LocateEmbedded, rice.LocateAppended, rice.LocateFS},
 	}
-	box, _ := conf.FindBox("./docker-environment")
+	box := conf.MustFindBox("./docker-environment")
 	upstreamString, _ := box.String("upstreams.conf")
 	var upstreamContent []string
 
