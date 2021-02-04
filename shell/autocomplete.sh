@@ -56,4 +56,3 @@ _gdpx() {
 }
 
 complete -F _gdpx gdpx
-# 
